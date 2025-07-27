@@ -110,11 +110,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Task assignment and status updates
 
     // Admin: assign a task to a student
-    Route::get(
-        '/users',
-        [UserController::class, 'list']
-    )->middleware('permission:assign_task');
-
     Route::post('/tasks', [TaskController::class, 'store'])
          ->middleware('permission:assign_task');
     Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])
@@ -124,19 +119,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/taskList', [TaskController::class, 'index'])
     ->middleware('permission:assign_task');
     
-    // View a single task (Admin)
-    Route::get('/tasks/{task}', [TaskController::class, 'show'])
-    ->middleware('permission:assign_task');
-    
     // Admin edits task metadata (title/description/due_date/status)
-    Route::put('/tasks/{task}/', [TaskController::class, 'updateTask'])
+    Route::put('/tasks/{task}', [TaskController::class, 'updateTask'])
     ->middleware('permission:assign_task');
 
     // Student submits a completed task;
     Route::get('/tasks', [TaskController::class, 'ownTasks']
     )->middleware('permission:submit_task');
      Route::get('/tasks/{task}', [TaskController::class, 'show'])
-         ->middleware('permission:submit_task');
+         ->middleware('permission:submit_task|assign_task');
     Route::post('/tasks/{task}/submit', [TaskController::class, 'submit']
     )->middleware('permission:submit_task');
      
@@ -167,7 +158,7 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::get(
         '/userList',
         [UserController::class, 'list']
-    )->middleware('permission:view_users');
+    )->middleware('permission:view_users|assign_task');
 
      // View any single user’s profile (or “my profile” if you pass the logged‐in ID)
      Route::get(
