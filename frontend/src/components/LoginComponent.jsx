@@ -1,7 +1,7 @@
 // src/components/LoginComponent.jsx
 
 import { useState, useContext } from "react";
-import img from "../images/7e1b90195590875.Y3JvcCwzMDQyLDIzODAsMTU4LDA-removebg-preview.png";
+import img from "../images/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import HeaderComponent from "./header";
 import { AuthContext } from "../contexts/AuthContext";
@@ -84,7 +84,7 @@ export default function LoginComponent() {
                     <div className="card-body p-md-5 mx-md-4">
                       <div className="text-center">
                         <img src={img} alt="logo" style={{ width: 120 }} />
-                        <h4>We are The Fixing Team</h4>
+                        <h4>AMS</h4>
                       </div>
 
                       <form onSubmit={submitHandler}>
