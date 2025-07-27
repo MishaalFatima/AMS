@@ -86,8 +86,8 @@ export default function StudentListForAttendance() {
         <Table striped bordered hover>
           <thead>
             <tr>
-              <th>Id</th>
-              <th>Avatar</th>
+              <th>Student Id</th>
+              <th>Profile</th>
               <th>Username</th>
               <th>Email</th>
               <th>Phone</th>

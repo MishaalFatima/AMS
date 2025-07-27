@@ -6,7 +6,6 @@ import { AuthContext } from "../contexts/AuthContext";
 
 // 1) All possible menu items in one place
 const menuConfig = [
-  { to: "/dashboard",          label: "Dashboard",           perm: null },
   { to: "/users",              label: "All Users",          perm: "view_users" },
   { to: "/StudentListForAttendance",     label: "Attendance Records", perm: "view_attendance" },
   { to: "/MarkAttendance",    label: "Mark Attendance",     perm: "mark_attendance" },

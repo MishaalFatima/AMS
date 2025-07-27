@@ -1,7 +1,7 @@
 // src/components/admin/EditTask.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import AdminNavBar from ".././NavBar";
+import AdminNavBar from "../NavBar";
 
 export default function EditTask() {
   const { taskId } = useParams();
@@ -16,22 +16,25 @@ export default function EditTask() {
   const [saving, setSaving]           = useState(false);
   const [error, setError]             = useState("");
 
-  // 1️⃣ Fetch existing task details
+  // 1️⃣ Fetch the single task by ID
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setError("");
       try {
         const res = await fetch(
-          `http://127.0.0.1:8000/api/tasks/${taskId}/`,
+          `http://127.0.0.1:8000/api/tasks/${taskId}`,
           {
             headers: {
-              Accept:      "application/json",
-              Authorization:`Bearer ${token}`,
+              Accept:        "application/json",
+              Authorization: `Bearer ${token}`,
             },
           }
         );
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const task = await res.json();
+
+        // Populate your form
         setTitle(task.title);
         setDescription(task.description);
         setDueDate(task.due_date);
@@ -44,7 +47,7 @@ export default function EditTask() {
     })();
   }, [taskId, token]);
 
-  // 2️⃣ Submit updated fields via PUT
+  // 2️⃣ Submit updated fields via PUT (or PATCH if that’s what your route expects)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -54,17 +57,13 @@ export default function EditTask() {
       const res = await fetch(
         `http://127.0.0.1:8000/api/tasks/${taskId}`,
         {
-          method: "PUT",
+          method: "PUT",                            
           headers: {
             "Content-Type":  "application/json",
             Accept:          "application/json",
             Authorization:   `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            title,
-            description,
-            due_date: dueDate,
-          }),
+          body: JSON.stringify({ title, description, due_date: dueDate }),
         }
       );
 
@@ -75,13 +74,11 @@ export default function EditTask() {
                              .join(" ");
         throw new Error(msgs || "Validation failed.");
       }
-
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}));
         throw new Error(payload.message || `Error ${res.status}`);
       }
 
-      // on success → back to assigned tasks list
       navigate("/AssignedTasks");
     } catch (err) {
       console.error(err);

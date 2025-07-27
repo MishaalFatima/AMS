@@ -1,24 +1,23 @@
 // src/components/AssignTask.jsx
-
 import { useState, useEffect } from "react";
-import SubNavbar from ".././NavBar";
+import SubNavbar from "../NavBar";           // your existing NavBar
 import { Link } from "react-router-dom";
 
-const AssignTask = () => {
-  // Students state
-  const [students, setStudents] = useState([]);
+export default function AssignTask() {
+  // Students + roles map
+  const [students, setStudents]       = useState([]);
+  const [rolesMap, setRolesMap]       = useState({});
   const [studentLoading, setStudentLoading] = useState(true);
-  const [studentError, setStudentError] = useState("");
+  const [studentError, setStudentError]     = useState("");
 
   // Form state
   const [selectedStudentId, setSelectedStudentId] = useState("");
-  const [title, setTitle] = useState("");
+  const [title, setTitle]         = useState("");
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [dueDate, setDueDate]     = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
 
-  // Load students once
   useEffect(() => {
     (async () => {
       setStudentLoading(true);
@@ -26,20 +25,41 @@ const AssignTask = () => {
 
       try {
         const token = localStorage.getItem("authToken");
-        const res = await fetch("http://127.0.0.1:8000/api/users", {
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+
+        // 1) fetch roles & users in parallel
+        const [rolesRes, usersRes] = await Promise.all([
+          fetch("http://127.0.0.1:8000/api/roles", {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          fetch("http://127.0.0.1:8000/api/userList", {
+            headers: {
+              Accept:        "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
+
+        if (!rolesRes.ok) throw new Error("Could not load roles");
+        if (!usersRes.ok) throw new Error("Could not load users");
+
+        const rolesData = await rolesRes.json();
+        const usersData = await usersRes.json();
+
+        // 2) build map: role_id → role_name (lowercase)
+        const map = {};
+        rolesData.forEach(r => {
+          map[r.id] = r.name.toLowerCase();
         });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data = await res.json();
-        const studentsOnly = data.filter(
-          (u) => u.role && u.role.toLowerCase() === "student"
+        setRolesMap(map);
+
+        // 3) filter only students
+        const studentsOnly = usersData.filter(
+          u => map[u.role_id] === "student"
         );
         setStudents(studentsOnly);
+
       } catch (err) {
-        console.error("Error loading students:", err);
+        console.error("Error loading students/roles:", err);
         setStudentError("Failed to load students.");
       } finally {
         setStudentLoading(false);
@@ -47,7 +67,7 @@ const AssignTask = () => {
     })();
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     if (!selectedStudentId || !title || !description || !dueDate) {
       setError("All fields are required.");
@@ -61,10 +81,10 @@ const AssignTask = () => {
       const token = localStorage.getItem("authToken");
       const formData = new FormData();
       formData.append("student_id", selectedStudentId);
-      formData.append("title", title);
+      formData.append("title",       title);
       formData.append("description", description);
-      formData.append("due_date", dueDate);
-      formData.append("status", "pending");
+      formData.append("due_date",    dueDate);
+      // status is set on server side by default, no need to append
 
       const res = await fetch("http://127.0.0.1:8000/api/tasks", {
         method: "POST",
@@ -74,28 +94,20 @@ const AssignTask = () => {
         body: formData,
       });
 
-      // Optional: log for debugging
-      console.log("POST /api/tasks ->", res.status, res.ok);
-
-      // Parse JSON once
+      // try parse JSON for error messages
       const payload = await res.json().catch(() => null);
-
       if (!res.ok) {
         const msg = payload?.message || `Error ${res.status}`;
         throw new Error(msg);
       }
 
-      // ✅ SUCCESS: reset the form fields
+      // ✅ reset form
       setSelectedStudentId("");
       setTitle("");
       setDescription("");
       setDueDate("");
-      setError(""); // clear any leftover errors
+      setError("");
 
-      // Optionally show a toast/snackbar here to confirm success
-
-      // If you still want to navigate away, uncomment:
-      // navigate("/admin/tasks");
     } catch (err) {
       console.error("handleSubmit error:", err);
       setError(err.message || "An error occurred while assigning the task.");
@@ -128,7 +140,7 @@ const AssignTask = () => {
                 <select
                   className="form-select"
                   value={selectedStudentId}
-                  onChange={(e) => setSelectedStudentId(e.target.value)}
+                  onChange={e => setSelectedStudentId(e.target.value)}
                   disabled={studentLoading || !!studentError}
                 >
                   <option value="">
@@ -140,9 +152,9 @@ const AssignTask = () => {
                   </option>
                   {!studentLoading &&
                     !studentError &&
-                    students.map((s) => (
+                    students.map(s => (
                       <option key={s.id} value={s.id}>
-                        {s.UserName || s.name} ({s.email})
+                        {s.UserName} ({s.email})
                       </option>
                     ))}
                 </select>
@@ -155,7 +167,7 @@ const AssignTask = () => {
                   className="form-control"
                   placeholder="Task title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={e => setTitle(e.target.value)}
                 />
               </div>
 
@@ -166,7 +178,7 @@ const AssignTask = () => {
                   rows="4"
                   placeholder="Task details"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                 />
               </div>
 
@@ -176,7 +188,7 @@ const AssignTask = () => {
                   type="date"
                   className="form-control"
                   value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
+                  onChange={e => setDueDate(e.target.value)}
                 />
               </div>
 
@@ -193,6 +205,4 @@ const AssignTask = () => {
       </div>
     </>
   );
-};
-
-export default AssignTask;
+}
