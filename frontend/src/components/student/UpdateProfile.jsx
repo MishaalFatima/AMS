@@ -14,12 +14,15 @@ export default function UpdateProfile() {
   const [success, setSuccess]   = useState("");
   const [profile, setProfile]   = useState(null);
 
+  // include role_id in formData
   const [formData, setFormData] = useState({
     UserName: "",
-    email: "",
-    phone: "",
-    img_uri: null,
+    email:    "",
+    phone:    "",
+    img_uri:  null,
+    role_id:  "",          // ← keep the user’s role_id here
   });
+
   const [preview, setPreview] = useState("");
 
   useEffect(() => {
@@ -46,8 +49,9 @@ export default function UpdateProfile() {
           email:    data.email,
           phone:    data.phone || "",
           img_uri:  null,
+          role_id:  data.role_id?.toString() || "",  // ← store it
         });
-        // build preview URL
+        // build avatar preview URL
         const url = data.avatar_url?.startsWith("http")
           ? data.avatar_url
           : `http://127.0.0.1:8000${data.avatar_url || ""}`;
@@ -64,7 +68,8 @@ export default function UpdateProfile() {
   }, [token, user, navigate]);
 
   const handleChange = e => {
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
     setFormData(f => ({ ...f, [e.target.name]: e.target.value }));
   };
 
@@ -82,12 +87,14 @@ export default function UpdateProfile() {
     if (!profile) return;
 
     setLoading(true);
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
 
     const body = new FormData();
     body.append("UserName", formData.UserName);
     body.append("email",    formData.email);
     body.append("phone",    formData.phone);
+    body.append("role_id",  formData.role_id);      // ← include the frozen role_id
     if (formData.img_uri) body.append("img_uri", formData.img_uri);
 
     try {
@@ -171,6 +178,7 @@ export default function UpdateProfile() {
           </div>
 
           <div className="col-md-9">
+            {/* Username */}
             <div className="mb-3">
               <label className="form-label">Username</label>
               <input
@@ -183,6 +191,7 @@ export default function UpdateProfile() {
               />
             </div>
 
+            {/* Email */}
             <div className="mb-3">
               <label className="form-label">Email</label>
               <input
@@ -195,6 +204,7 @@ export default function UpdateProfile() {
               />
             </div>
 
+            {/* Phone */}
             <div className="mb-3">
               <label className="form-label">Phone</label>
               <input
@@ -206,6 +216,25 @@ export default function UpdateProfile() {
               />
             </div>
 
+            {/* Role (visible but disabled) */}
+            <div className="mb-3">
+              <label className="form-label">Role</label>
+              <select
+                className="form-select"
+                name="role_id"
+                value={formData.role_id}
+                disabled
+              >
+                <option>
+                  {profile.roles?.[0]?.name
+                    ? profile.roles[0].name.charAt(0).toUpperCase() +
+                      profile.roles[0].name.slice(1)
+                    : "—"}
+                </option>
+              </select>
+            </div>
+
+            {/* Submit / Cancel */}
             <button
               type="submit"
               className="btn btn-success me-2"

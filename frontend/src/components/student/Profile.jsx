@@ -24,7 +24,7 @@ export default function Profile() {
 
     fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
       headers: {
-        Accept: "application/json",
+        Accept:        "application/json",
         Authorization: `Bearer ${token}`,
       },
     })
@@ -74,6 +74,18 @@ export default function Profile() {
     ? profile.avatar_url
     : `http://127.0.0.1:8000${profile.avatar_url}`;
 
+  // Determine displayed role name:
+  const rawRoleName = 
+    // first try your belongsTo('role')
+    profile.role?.name
+    // fallback to Spatie's roles array
+    || (profile.roles && profile.roles[0]?.name)
+    || "";
+
+  const displayRole = rawRoleName
+    ? rawRoleName.charAt(0).toUpperCase() + rawRoleName.slice(1)
+    : "-";
+
   return (
     <div>
       <SubNavbar />
@@ -103,7 +115,7 @@ export default function Profile() {
             <p><strong>Username:</strong> {profile.UserName}</p>
             <p><strong>Email:</strong> {profile.email}</p>
             <p><strong>Phone:</strong> {profile.phone || "-"}</p>
-            <p><strong>Role:</strong> {profile.role}</p>
+            <p><strong>Role:</strong> {displayRole}</p>
             <button
               className="btn btn-primary mt-3"
               onClick={() => navigate("/UpdateProfile")}

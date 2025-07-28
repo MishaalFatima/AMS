@@ -183,7 +183,7 @@ export default function TaskSubmission() {
             {task.submission_path && (
               <p className="mt-2">
                 <a
-                  href={`http://127.0.0.1:8000/storage/${task.submission_path}`}
+                  href={`http://127.0.0.1:8000/storage/submissions/${task.submission_path}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-sm btn-outline-primary"
