@@ -1,8 +1,8 @@
 // src/components/StudentListForAttendance.jsx
 import { useState, useEffect } from "react";
 import { Table, Spinner, Button } from "react-bootstrap";
-import { useNavigate }            from "react-router-dom";
-import AdminNavBar                from "../NavBar"; // or TeacherNavBar
+import { useNavigate } from "react-router-dom";
+import AdminNavBar from ".././NavBar";
 
 export default function StudentListForAttendance() {
   const [students, setStudents] = useState([]);

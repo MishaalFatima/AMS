@@ -1,7 +1,7 @@
 // src/components/admin/EditTask.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import AdminNavBar from "../NavBar";
+import AdminNavBar from ".././NavBar";
 
 export default function EditTask() {
   const { taskId } = useParams();

@@ -19,49 +19,51 @@ export default function StudentTasksList() {
   }, [token]);
 
   return (
-    <div className="container mt-4">
+    <>
       <SubNavbar />
-      <h2>Your Tasks</h2>
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Due</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tasks.map((task) => (
-            <tr key={task.id}>
-              <td>{task.title}</td>
-              <td>{new Date(task.due_date).toLocaleDateString()}</td>
-              <td>
-                <span
-                  className={`badge ${
-                    task.status === "pending"
-                      ? "bg-warning text-dark"
-                      : task.status === "submitted"
-                      ? "bg-info text-dark"
-                      : "bg-success text-white"
-                  }`}
-                >
-                  {task.status}
-                </span>
-              </td>
-              <td>
-                <Link
-                  to={`/TaskSubmission/${task.id}`}
-                  className="btn btn-sm btn-primary"
-                  disabled={task.status !== "pending"}
-                >
-                  Submit
-                </Link>
-              </td>
+      <div className="container mt-4">
+        <h2>Your Tasks</h2>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Due</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {tasks.map((task) => (
+              <tr key={task.id}>
+                <td>{task.title}</td>
+                <td>{new Date(task.due_date).toLocaleDateString()}</td>
+                <td>
+                  <span
+                    className={`badge ${
+                      task.status === "pending"
+                        ? "bg-warning text-dark"
+                        : task.status === "submitted"
+                        ? "bg-info text-dark"
+                        : "bg-success text-white"
+                    }`}
+                  >
+                    {task.status}
+                  </span>
+                </td>
+                <td>
+                  <Link
+                    to={`/TaskSubmission/${task.id}`}
+                    className="btn btn-sm btn-primary"
+                    disabled={task.status !== "pending"}
+                  >
+                    Submit
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

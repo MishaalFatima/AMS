@@ -2,11 +2,11 @@
 import { useState, useEffect } from "react";
 import { Table, Button }      from "react-bootstrap";
 import { useNavigate }        from "react-router-dom";
-import AdminNavBar            from "../NavBar";
+import AdminNavBar            from ".././NavBar";
 
 export default function AllUserForAdmin() {
   const [userList, setUserList]   = useState([]);
-  const [rolesMap, setRolesMap]   = useState({});   // ← id→name lookup
+  const [rolesMap, setRolesMap]   = useState({}); 
   const navigate                  = useNavigate();
 
   useEffect(() => {

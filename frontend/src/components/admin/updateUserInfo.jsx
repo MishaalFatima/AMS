@@ -8,6 +8,7 @@ export default function UpdateUserInfo() {
   const { id }       = useParams();
   const navigate     = useNavigate();
   const token        = localStorage.getItem("authToken");
+  
 
   const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
@@ -71,7 +72,7 @@ export default function UpdateUserInfo() {
 
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/user/${id}`, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Accept:         "application/json",

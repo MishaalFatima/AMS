@@ -18,10 +18,21 @@ class RolePermissionSeeder extends Seeder
         $permissions = [
             //student
             'view-dashboard',
+            'mark_attendance',
+            'view_own_attendance',
+            'request_leave',
+            'view_own_leaves',
             'submit_task',
             
-           
+            //both
+            'edit_profile',
+            
+            //admin
+            'view_users',
+            'view_attendance',
+            'approve_leave',
             'assign_task',
+            'manage_roles',
         ];
 
         // 2) Create or update Permission records
@@ -36,7 +47,13 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'student', 'guard_name' => $guard]
         );
         $student->syncPermissions([
+            'view-dashboard',
+            'mark_attendance',
+            'view_own_attendance',
+            'request_leave',
+            'view_own_leaves',
             'submit_task',
+            'edit_profile',
         ]);
 
         // 4) Admin role — full access to everything
@@ -44,7 +61,12 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'admin', 'guard_name' => $guard]
         );
         $admin->syncPermissions([
+            'edit_profile',
+            'view_users',
+            'view_attendance',
+            'approve_leave',
             'assign_task',
+            'manage_roles',
         ]);
 
         // (Optional) If you have a “teacher” or other roles, seed them here too…

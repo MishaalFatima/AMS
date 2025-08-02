@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('phone');
 
             // Role (Student, Admin, etc.)
-            $table->string('role');
+            $table->unsignedBigInteger('role_id');
 
             // Password
             $table->string('password');

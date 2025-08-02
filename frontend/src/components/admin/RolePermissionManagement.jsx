@@ -1,6 +1,6 @@
 // src/components/admin/RolePermissionManagement.jsx
-import { useState, useEffect } from "react";
-import AdminNavBar from "../NavBar";
+import { useState, useEffect, useContext } from "react";
+import AdminNavBar from ".././NavBar";
 
 export default function RolePermissionManagement() {
   const [roles, setRoles] = useState([]);

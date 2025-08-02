@@ -172,6 +172,9 @@ Route::middleware('auth:sanctum')->group(function () {
         [UserController::class, 'updateUser']
     )->middleware('permission:edit_profile|view_users');
 
+    Route::put('/user/{id}',   [UserController::class, 'updateUser'])
+     ->middleware('permission:edit_profile|view_users');
+
     // Admin: delete a user
     Route::delete(
         '/user/{id}',

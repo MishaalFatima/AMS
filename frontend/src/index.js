@@ -4,7 +4,7 @@ import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 
 ReactDOM.render(
-  <AuthProvider>        {/* ← this is crucial */}
+  <AuthProvider>
     <App />
   </AuthProvider>,
   document.getElementById("root")

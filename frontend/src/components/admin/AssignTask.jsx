@@ -1,6 +1,6 @@
 // src/components/AssignTask.jsx
 import { useState, useEffect } from "react";
-import SubNavbar from "../NavBar";           // your existing NavBar
+import SubNavbar from ".././NavBar";
 import { Link } from "react-router-dom";
 
 export default function AssignTask() {

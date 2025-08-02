@@ -1,67 +1,107 @@
-import React, { createContext, useState, useEffect } from "react";
+// src/contexts/AuthContext.jsx
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback
+} from "react";
 
-// 1) Create the context
+// 1️⃣ Create the context
 export const AuthContext = createContext({
-  user: null,         // null=loading, false=unauth, object=logged‑in
-  perms: [],          // array of permission strings
-  can: () => false,   // helper(p)→bool
-  login: async () => {},
-  logout: () => {},
+  user:       null,     // null = checking, false = unauth, object = logged‑in
+  perms:      [],       // array of permission strings
+  loading:    true,     // true while we validate
+  can:        () => false,
+  login:      async () => {},
+  logout:     () => {},
+  reloadUser: async () => {},
 });
 
 export function AuthProvider({ children }) {
-  const [user,  setUser]  = useState(null);
-  const [perms, setPerms] = useState([]);
+  // 2️⃣ Hydrate initial state from localStorage
+  const storedUser  = JSON.parse(localStorage.getItem("authUser")  || "null");
+  const storedPerms = JSON.parse(localStorage.getItem("authPerms") || "[]");
 
-  // 2) permission‑check helper
+  const [user,    setUser]    = useState(storedUser);
+  const [perms,   setPerms]   = useState(storedPerms);
+  const [loading, setLoading] = useState(true);
+
+  // 3️⃣ permission‑check helper
   const can = (permission) => perms.includes(permission);
 
-  // 3) On mount, load /api/user
-  useEffect(() => {
+  // 4️⃣ Single function to (re)fetch the logged‑in user
+  const fetchUser = useCallback(async () => {
     const token = localStorage.getItem("authToken");
     if (!token) {
+      // no token → unauthenticated
       setUser(false);
+      setPerms([]);
+      setLoading(false);
       return;
     }
 
-    fetch("http://127.0.0.1:8000/api/user", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Not authenticated");
-        return res.json();
-      })
-      .then((data) => {
-        console.log("💾 /api/user response:", data);
-        setUser(data.user);
-        setPerms(Array.isArray(data.permissions) ? data.permissions : []);
-      })
-      .catch(() => {
-        localStorage.removeItem("authToken");
-        setUser(false);
-        setPerms([]);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/user", {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) throw new Error("Invalid token");
+      const { user: me, permissions } = await res.json();
+      setUser(me);
+      setPerms(Array.isArray(permissions) ? permissions : []);
+
+      // persist for next reload
+      localStorage.setItem("authUser",  JSON.stringify(me));
+      localStorage.setItem("authPerms", JSON.stringify(permissions));
+    } catch {
+      // bad token → clear everything
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authUser");
+      localStorage.removeItem("authPerms");
+      setUser(false);
+      setPerms([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // 4) Called after a successful login
+  // 5️⃣ On mount, run fetchUser once
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  // 6️⃣ Called after a successful login
   async function login(token, userObj, permissions) {
     localStorage.setItem("authToken", token);
+    localStorage.setItem("authUser",  JSON.stringify(userObj));
+    localStorage.setItem("authPerms", JSON.stringify(permissions));
 
-    console.log("💾 login response:", { user: userObj, permissions });
     setUser(userObj);
-    setPerms(Array.isArray(permissions) ? permissions : []);
+    setPerms(permissions);
+    setLoading(false);
   }
 
-  // 5) Called on logout
+  // 7️⃣ Called on logout
   function logout() {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("authPerms");
     setUser(false);
     setPerms([]);
   }
 
-  // 6) Expose context value
+  // 8️⃣ Expose context value
   return (
-    <AuthContext.Provider value={{ user, perms, can, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        perms,
+        loading,
+        can,
+        login,
+        logout,
+        reloadUser: fetchUser
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

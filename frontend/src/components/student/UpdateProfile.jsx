@@ -20,7 +20,7 @@ export default function UpdateProfile() {
     email:    "",
     phone:    "",
     img_uri:  null,
-    role_id:  "",          // ← keep the user’s role_id here
+    role_id:  "",
   });
 
   const [preview, setPreview] = useState("");
