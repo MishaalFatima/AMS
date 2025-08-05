@@ -51,29 +51,43 @@ class TaskController extends Controller
                 throw new \Exception("No phone number on user {$student->id}");
             }
 
+             $sid    = config('services.twilio.sid');
+            $token  = config('services.twilio.token');
+            $from   = config('services.twilio.from');      // e.g. "whatsapp:+14155238886"
+            $to     = 'whatsapp:+' . ltrim($student->phone, '+'); // ensure leading '+'
+
             // Initialize Twilio client
-            $twilio = new Client(
-                config('services.twilio.sid'),
-                config('services.twilio.token')
-            );
+            $twilio = new Client($sid, $token);
 
             // Build your message
-            $msg = "📌 New Task Assigned 📌\n"
+            $body  = "📌 New Task Assigned 📌\n"
                  . "Title: {$task->title}\n"
                  . "Due:  " . (new \DateTime($task->due_date))->format('Y-m-d') . "\n\n"
                  . "Please submit by the due date.";
-
+            
+            // Log the outgoing payload
+            Log::debug('Twilio Whatsapp Payload', compact('to','from','body'));
+            
             // Send via WhatsApp
-            $twilio->messages->create(
-                'whatsapp:' . $student->phone,
+            $message =$twilio->messages->create($to,
                 [
-                    'from' => config('services.twilio.from'),
-                    'body' => $msg,
+                    'from' => $from,
+                    'body' => $body,
                 ]
             );
+
+            Log::info('Twilio Whatsapp Sent', [
+                'sid'    => $message->sid,
+                'status' => $message->status,
+            ]);
         } catch (\Throwable $e) {
             // Log and move on—don’t block task creation
-            Log::error("WhatsApp task‑assign failed for user {$data['student_id']}: {$e->getMessage()}");
+            Log::error(
+                "WhatsApp task-assign failed for user {$data['student_id']}",
+                ['error' => $e->getMessage()]
+            );
+            // Re-throw so you see it in the HTTP response during development
+            throw $e;
         }
 
         // Return the created task

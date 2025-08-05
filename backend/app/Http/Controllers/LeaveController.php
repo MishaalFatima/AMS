@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use Twilio\Rest\Client;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
+
 
 
 
@@ -47,7 +49,16 @@ class LeaveController extends Controller
                      . "Please review at Portal.";
 
             // fetch all admins (assumes you have a 'role' column)
-            $admins = User::where('role', 'Admin')->get();
+                        
+
+            $adminRole = Role::where('name', 'admin')->first();
+            if ($adminRole) {
+                $admins = User::where('role_id', $adminRole->id)
+                ->whereNotNull('phone')
+                ->get();
+            } else {
+                $admins = collect();
+            }
 
             foreach ($admins as $admin) {
                 if (! $admin->phone) {
