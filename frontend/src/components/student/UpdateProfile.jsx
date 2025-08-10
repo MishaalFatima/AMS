@@ -7,24 +7,28 @@ import { AuthContext } from "../../contexts/AuthContext.jsx";
 export default function UpdateProfile() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const token = localStorage.getItem("authToken");
+  const token     = localStorage.getItem("authToken");
 
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
   const [success, setSuccess]   = useState("");
   const [profile, setProfile]   = useState(null);
 
-  // include role_id in formData
+  // include fields for current password and new password
   const [formData, setFormData] = useState({
-    UserName: "",
-    email:    "",
-    phone:    "",
-    img_uri:  null,
-    role_id:  "",
+    current_password:      "",  // NEW
+    UserName:              "",
+    email:                 "",
+    phone:                 "",
+    img_uri:               null,
+    role_id:               "",
+    new_password:          "",
+    new_password_confirm:  "",
   });
 
   const [preview, setPreview] = useState("");
 
+  // 1️⃣ Load the user’s existing data
   useEffect(() => {
     if (!token || !user?.id) {
       navigate("/login");
@@ -39,19 +43,19 @@ export default function UpdateProfile() {
     })
       .then(res => {
         if (res.status === 401) throw new Error("Unauthorized");
-        if (!res.ok) throw new Error(`Error ${res.status}`);
+        if (!res.ok)         throw new Error(`Error ${res.status}`);
         return res.json();
       })
       .then(data => {
         setProfile(data);
-        setFormData({
+        setFormData(f => ({
+          ...f,
           UserName: data.UserName,
           email:    data.email,
           phone:    data.phone || "",
-          img_uri:  null,
-          role_id:  data.role_id?.toString() || "",  // ← store it
-        });
-        // build avatar preview URL
+          role_id:  data.role_id?.toString() || "",
+        }));
+        // avatar preview
         const url = data.avatar_url?.startsWith("http")
           ? data.avatar_url
           : `http://127.0.0.1:8000${data.avatar_url || ""}`;
@@ -67,10 +71,12 @@ export default function UpdateProfile() {
       .finally(() => setLoading(false));
   }, [token, user, navigate]);
 
+  // input handlers
   const handleChange = e => {
     setError("");
     setSuccess("");
-    setFormData(f => ({ ...f, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData(f => ({ ...f, [name]: value }));
   };
 
   const handleFile = e => {
@@ -82,26 +88,47 @@ export default function UpdateProfile() {
     reader.readAsDataURL(file);
   };
 
+  // 2️⃣ Submit updates
   const handleSubmit = async e => {
     e.preventDefault();
     if (!profile) return;
+
+    // 2.a) Ensure current password is provided
+    if (!formData.current_password) {
+      setError("Please confirm your current password.");
+      return;
+    }
+
+    // 2.b) If changing to a new password, confirm match
+    if (
+      formData.new_password &&
+      formData.new_password !== formData.new_password_confirm
+    ) {
+      setError("New password and confirmation do not match.");
+      return;
+    }
 
     setLoading(true);
     setError("");
     setSuccess("");
 
+    // build FormData
     const body = new FormData();
-    body.append("UserName", formData.UserName);
-    body.append("email",    formData.email);
-    body.append("phone",    formData.phone);
-    body.append("role_id",  formData.role_id);      // ← include the frozen role_id
-    if (formData.img_uri) body.append("img_uri", formData.img_uri);
+    body.append("current_password", formData.current_password);  // NEW
+    body.append("UserName",         formData.UserName);
+    body.append("email",            formData.email);
+    body.append("phone",            formData.phone);
+    body.append("role_id",          formData.role_id);
+    if (formData.img_uri)           body.append("img_uri", formData.img_uri);
+    if (formData.new_password)      body.append("password", formData.new_password);
+    if (formData.new_password_confirm)
+                                     body.append("password_confirmation", formData.new_password_confirm);
 
     try {
       const res = await fetch(
         `http://127.0.0.1:8000/api/user/${profile.id}`,
         {
-          method: "POST",
+          method:  "POST",
           headers: {
             Accept:        "application/json",
             Authorization: `Bearer ${token}`,
@@ -111,7 +138,7 @@ export default function UpdateProfile() {
       );
 
       if (res.status === 422) {
-        const errJson = await res.json();
+        const errJson  = await res.json();
         const messages = Object.values(errJson.errors || {})
           .flat()
           .join(" ");
@@ -152,6 +179,7 @@ export default function UpdateProfile() {
         {success && <div className="alert alert-success">{success}</div>}
 
         <form onSubmit={handleSubmit} className="row g-4">
+          {/* Avatar Section */}
           <div className="col-md-3 text-center">
             {preview ? (
               <img
@@ -177,7 +205,21 @@ export default function UpdateProfile() {
             />
           </div>
 
+          {/* Fields Section */}
           <div className="col-md-9">
+            {/* Current Password */}
+            <div className="mb-3">
+              <label className="form-label">Current Password</label>
+              <input
+                type="password"
+                name="current_password"
+                className="form-control"
+                value={formData.current_password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
             {/* Username */}
             <div className="mb-3">
               <label className="form-label">Username</label>
@@ -216,22 +258,46 @@ export default function UpdateProfile() {
               />
             </div>
 
-            {/* Role (visible but disabled) */}
+            {/* Role (read-only) */}
             <div className="mb-3">
               <label className="form-label">Role</label>
-              <select
-                className="form-select"
-                name="role_id"
-                value={formData.role_id}
-                disabled
-              >
-                <option>
-                  {profile.roles?.[0]?.name
+              <input
+                type="text"
+                className="form-control"
+                value={
+                  profile.roles?.[0]?.name
                     ? profile.roles[0].name.charAt(0).toUpperCase() +
                       profile.roles[0].name.slice(1)
-                    : "—"}
-                </option>
-              </select>
+                    : "—"
+                }
+                disabled
+              />
+            </div>
+
+            {/* New Password */}
+            <div className="mb-3">
+              <label className="form-label">New Password</label>
+              <input
+                type="password"
+                name="new_password"
+                className="form-control"
+                value={formData.new_password}
+                onChange={handleChange}
+                placeholder="Leave blank to keep current"
+              />
+            </div>
+
+            {/* Confirm New Password */}
+            <div className="mb-3">
+              <label className="form-label">Confirm New Password</label>
+              <input
+                type="password"
+                name="new_password_confirm"
+                className="form-control"
+                value={formData.new_password_confirm}
+                onChange={handleChange}
+                placeholder="Repeat new password"
+              />
             </div>
 
             {/* Submit / Cancel */}

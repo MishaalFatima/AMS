@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./components/Home.jsx";
 import LoginComponent from "./components/LoginComponent.jsx";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword  from "./components/ResetPassword";
 import RegisterComponent from "./components/RegisterComponent.jsx";
 import Unauthorized from "./components/Unauthorized.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -39,6 +41,8 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/register" element={<RegisterComponent />} />
           <Route path="/login" element={<LoginComponent />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password"  element={<ResetPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           {/* Dashboard: auth‑only (permission=null) */}
           <Route element={<ProtectedRoute permission={null} />}>

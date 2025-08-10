@@ -11,7 +11,7 @@ export default function LoginComponent() {
   const { login } = useContext(AuthContext);
 
   const [account, setAccount] = useState({ UserName: "", password: "" });
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
 
   function changeHandler(e) {
     setError("");
@@ -42,6 +42,7 @@ export default function LoginComponent() {
       let msg = "Username or password is incorrect.";
       try {
         const json = await res.json();
+        // Prefer server message or first validation error
         msg = json.message || Object.values(json.errors || {}).flat()[0] || msg;
       } catch {}
       setError(msg);
@@ -52,21 +53,21 @@ export default function LoginComponent() {
     try {
       data = await res.json();
       console.log("💾 login response:", data);
-
     } catch {
       setError("Unexpected server response. Please try again.");
       return;
     }
 
-    if (!data.token || !Array.isArray(data.user?.permissions)) {
-      setError("Login succeeded but permissions were missing.");
+    // Validate response shape
+    if (!data.token || !Array.isArray(data.permissions) || !data.user) {
+      setError("Login succeeded but server returned unexpected data.");
       return;
     }
 
-    // 1) Delegate persistence of token, user & perms to AuthContext
+    // Persist into AuthContext (auth provider will handle localStorage)
     login(data.token, data.user, data.permissions);
 
-    // 2) Redirect to the shared dashboard
+    // Redirect to dashboard (adjust if you use a different starting route)
     navigate("/dashboard");
   }
 
@@ -97,13 +98,14 @@ export default function LoginComponent() {
                             type="text"
                             name="UserName"
                             className="form-control"
-                            placeholder="UserName"
+                            placeholder="User Name"
                             value={account.UserName}
                             onChange={changeHandler}
                             required
                           />
                         </div>
-                        <div className="form-outline mb-4">
+
+                        <div className="form-outline mb-2">
                           <input
                             type="password"
                             name="password"
@@ -113,6 +115,13 @@ export default function LoginComponent() {
                             onChange={changeHandler}
                             required
                           />
+                        </div>
+
+                        {/* Forgot password link (keeps styling) */}
+                        <div className="mb-3 text-end">
+                          <Link to="/forgot-password" className="small">
+                            Forgot password?
+                          </Link>
                         </div>
 
                         <div className="text-center pt-1 mb-4">
